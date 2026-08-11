@@ -110,6 +110,12 @@ const SESION = (Q.get('s') || '').toUpperCase();
 const ALTA   = Q.get('m') === 'alta';
 let aborto = null, ocupado = false;
 
+function verClave(ver){
+  const v = !!ver && !ALTA;
+  $('form').hidden = !v;
+  $('separador').hidden = !v;
+}
+
 if (ALTA){
   $('rotulo').textContent = 'Central de llaves';
   $('titulo').textContent = 'Alta de tag';
@@ -117,7 +123,8 @@ if (ALTA){
   $('sesion').textContent = 'Sesión ' + SESION;
 }else{
   $('rotulo').textContent = NOMBRE || 'Llave universal';
-  $('sesion').textContent = SESION ? 'Sesión ' + SESION + ' · la pantalla grande entrará sola' : '';
+  $('sesion').textContent = '';
+  verClave(false);
 }
 
 /* ---------- utilidades ---------- */
@@ -181,6 +188,7 @@ async function armar(porToque){
     pinta('', 'Llave NFC no disponible',
       ALTA ? 'Abre esta página en Chrome para Android' : 'Este navegador no lee NFC. Usa la contraseña.');
     $('llave').disabled = true;
+    verClave(true);
     return;
   }
   if (!porToque){
@@ -188,6 +196,7 @@ async function armar(porToque){
       const p = await navigator.permissions.query({name:'nfc'});
       if (p.state !== 'granted'){
         pinta('tocable', 'Toca para activar la llave', 'Solo la primera vez');
+        verClave(true);
         return;
       }
     }catch(e){}
@@ -204,11 +213,14 @@ async function armar(porToque){
     lector.onreadingerror = () => mensaje('Lectura fallida. Acércalo más despacio.', 'mal');
     pinta('armado', ALTA ? 'Acerca el tag nuevo' : 'Acerca tu llave',
                      'Escuchando · por detrás del móvil');
+    verClave(false);
   }catch(err){
     if (err.name === 'NotAllowedError'){
       pinta('tocable', 'Toca para activar la llave', 'Permiso de NFC pendiente');
+      verClave(true);
     }else{
       pinta('', 'Llave no disponible', 'Enciende el NFC del móvil');
+      verClave(true);
     }
   }
 }
